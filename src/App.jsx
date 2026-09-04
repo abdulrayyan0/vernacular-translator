@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 
 function stopAudio(audio) {
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel()
+  }
   if (!audio) return
   audio.pause()
   audio.removeAttribute('src')
@@ -14,6 +17,7 @@ function App() {
   const [hindiHasError, setHindiHasError] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [speechError, setSpeechError] = useState('')
+  const [isCopied, setIsCopied] = useState(false)
   const audioRef = useRef(null)
 
   useEffect(() => {
@@ -83,6 +87,31 @@ function App() {
     }
   }
 
+  function speakWithSynthesis(text) {
+    if (!window.speechSynthesis) {
+      setSpeechError('Speech synthesis is not supported in this browser.')
+      return
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.lang = 'hi-IN'
+
+    const voices = window.speechSynthesis.getVoices()
+    const hindiVoice = voices.find((v) => v.lang.startsWith('hi'))
+    if (hindiVoice) {
+      utterance.voice = hindiVoice
+    }
+
+    utterance.onstart = () => setIsSpeaking(true)
+    utterance.onend = () => setIsSpeaking(false)
+    utterance.onerror = () => {
+      setIsSpeaking(false)
+      setSpeechError('Could not play the Hindi audio.')
+    }
+
+    window.speechSynthesis.speak(utterance)
+  }
+
   async function handleReadAloud() {
     const lesson = hindiText.trim()
 
@@ -104,13 +133,11 @@ function App() {
     setIsSpeaking(false)
 
     const audioUrl = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=hi&q=${encodeURIComponent(lesson)}`
-    console.log('[Read Aloud] Audio URL being requested:', audioUrl)
 
     const audio = new Audio(audioUrl)
     audioRef.current = audio
 
     audio.addEventListener('playing', () => {
-      console.log('[Read Aloud] Playback successfully started')
       setIsSpeaking(true)
     })
 
@@ -119,21 +146,40 @@ function App() {
       audioRef.current = null
     })
 
-    audio.addEventListener('error', (event) => {
-      console.error('[Read Aloud] Network or playback error:', audio.error, event)
-      setIsSpeaking(false)
+    audio.addEventListener('error', () => {
+      // Google TTS failed — fall back to native speech synthesis
       audioRef.current = null
-      setSpeechError('Could not play the Hindi audio.')
+      speakWithSynthesis(lesson)
     })
 
     try {
       await audio.play()
-    } catch (error) {
-      console.error('[Read Aloud] Network or playback error:', error)
-      setIsSpeaking(false)
+    } catch {
+      // Network / CORS / decode failure — fall back to native speech synthesis
       audioRef.current = null
-      setSpeechError('Could not play the Hindi audio.')
+      speakWithSynthesis(lesson)
     }
+  }
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(hindiText)
+      setIsCopied(true)
+      setTimeout(() => setIsCopied(false), 2000)
+    } catch {
+      setSpeechError('Failed to copy text.')
+    }
+  }
+
+  function handleClear() {
+    setEnglishText('')
+    setHindiText('')
+    setHindiHasError(false)
+    setSpeechError('')
+    setIsCopied(false)
+    stopAudio(audioRef.current)
+    audioRef.current = null
+    setIsSpeaking(false)
   }
 
   return (
@@ -210,6 +256,15 @@ function App() {
                 <span aria-hidden="true">🔊</span>
                 {isSpeaking ? 'Stop reading' : 'Read Aloud'}
               </button>
+              <button
+                type="button"
+                onClick={handleCopy}
+                disabled={!hindiText.trim() || hindiHasError}
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 shadow-sm transition hover:bg-amber-100 focus:outline-none focus:ring-4 focus:ring-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <span aria-hidden="true">{isCopied ? '✓' : '📋'}</span>
+                {isCopied ? 'Copied!' : 'Copy'}
+              </button>
               {speechError ? (
                 <p className="text-sm text-rose-600" role="alert">
                   {speechError}
@@ -254,6 +309,13 @@ function App() {
             ) : (
               'Translate Lesson'
             )}
+          </button>
+          <button
+            type="button"
+            onClick={handleClear}
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-7 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-100"
+          >
+            Clear
           </button>
         </div>
       </main>
