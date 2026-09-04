@@ -274,7 +274,7 @@ function App() {
           </section>
         </div>
 
-        <div className="mt-8 flex gap-3">
+        <div className="mt-8 flex flex-wrap items-center gap-3">
           <button
             type="button"
             onClick={handleTranslate}
