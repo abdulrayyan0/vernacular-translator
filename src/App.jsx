@@ -17,6 +17,11 @@ const LANGUAGES = [
   { code: 'mr', speechTag: 'mr-IN', label: 'मराठी' },
 ]
 
+const SpeechRecognition =
+  typeof window !== 'undefined'
+    ? window.SpeechRecognition || window.webkitSpeechRecognition
+    : null
+
 function App() {
   const [englishText, setEnglishText] = useState('')
   const [hindiText, setHindiText] = useState('')
@@ -26,7 +31,19 @@ function App() {
   const [speechError, setSpeechError] = useState('')
   const [isCopied, setIsCopied] = useState(false)
   const [targetLang, setTargetLang] = useState('hi')
+  const [playbackRate, setPlaybackRate] = useState(1)
+  const [isListening, setIsListening] = useState(false)
+  const [savedLessons, setSavedLessons] = useState(() => {
+    try {
+      const stored = localStorage.getItem('lingoduct_saved_lessons')
+      return stored ? JSON.parse(stored) : []
+    } catch {
+      return []
+    }
+  })
+  const [showSaved, setShowSaved] = useState(false)
   const audioRef = useRef(null)
+  const recognitionRef = useRef(null)
 
   const activeLang = LANGUAGES.find((l) => l.code === targetLang) || LANGUAGES[0]
 
@@ -45,8 +62,58 @@ function App() {
     return () => {
       stopAudio(audioRef.current)
       audioRef.current = null
+      if (recognitionRef.current) {
+        recognitionRef.current.abort()
+        recognitionRef.current = null
+      }
     }
   }, [])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('lingoduct_saved_lessons', JSON.stringify(savedLessons))
+    } catch {
+      // Storage full or unavailable — silently ignore
+    }
+  }, [savedLessons])
+
+  function handleMicToggle() {
+    if (!SpeechRecognition) {
+      setSpeechError('Speech recognition is not supported in this browser.')
+      return
+    }
+
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop()
+      recognitionRef.current = null
+      setIsListening(false)
+      return
+    }
+
+    const recognition = new SpeechRecognition()
+    recognition.lang = 'en-US'
+    recognition.continuous = false
+    recognition.interimResults = false
+    recognitionRef.current = recognition
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript
+      setEnglishText((prev) => (prev ? prev + ' ' + transcript : transcript))
+    }
+
+    recognition.onend = () => {
+      setIsListening(false)
+      recognitionRef.current = null
+    }
+
+    recognition.onerror = () => {
+      setIsListening(false)
+      recognitionRef.current = null
+    }
+
+    setIsListening(true)
+    recognition.start()
+  }
 
   async function handleTranslate() {
     const trimmed = englishText.trim()
@@ -116,6 +183,7 @@ function App() {
 
     const utterance = new SpeechSynthesisUtterance(text)
     utterance.lang = activeLang.speechTag
+    utterance.rate = playbackRate
 
     const voices = window.speechSynthesis.getVoices()
     const matchedVoice = voices.find((v) => v.lang.startsWith(activeLang.code))
@@ -156,6 +224,7 @@ function App() {
     const audioUrl = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${targetLang}&q=${encodeURIComponent(lesson)}`
 
     const audio = new Audio(audioUrl)
+    audio.playbackRate = playbackRate
     audioRef.current = audio
 
     audio.addEventListener('playing', () => {
@@ -203,6 +272,42 @@ function App() {
     setIsSpeaking(false)
   }
 
+  function handleSaveLesson() {
+    const english = englishText.trim()
+    const translated = hindiText.trim()
+    if (!english || !translated || hindiHasError) return
+
+    const alreadySaved = savedLessons.some(
+      (item) => item.english === english && item.lang === targetLang,
+    )
+    if (alreadySaved) return
+
+    setSavedLessons((prev) => [
+      ...prev,
+      { id: Date.now(), english, translated, lang: targetLang },
+    ])
+  }
+
+  function handleLoadLesson(item) {
+    setEnglishText(item.english)
+    setHindiText(item.translated)
+    setTargetLang(item.lang)
+    setHindiHasError(false)
+    setSpeechError('')
+    setIsCopied(false)
+    stopAudio(audioRef.current)
+    audioRef.current = null
+    setIsSpeaking(false)
+  }
+
+  function handleDeleteLesson(id) {
+    setSavedLessons((prev) => prev.filter((item) => item.id !== id))
+  }
+
+  function handleClearAllSaved() {
+    setSavedLessons([])
+  }
+
   return (
     <div className="min-h-svh bg-gradient-to-br from-sky-50 via-white to-amber-50 text-slate-800">
       <header className="border-b border-sky-100/80 bg-white/80 backdrop-blur-sm">
@@ -230,7 +335,22 @@ function App() {
         <div className="grid gap-6 lg:grid-cols-2">
           <section className="flex min-h-[22rem] flex-col rounded-3xl border border-sky-100 bg-white p-6 shadow-sm shadow-sky-100/80">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">English</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-slate-900">English</h2>
+                <button
+                  type="button"
+                  onClick={handleMicToggle}
+                  aria-pressed={isListening}
+                  className={`inline-flex items-center justify-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-sky-100 ${
+                    isListening
+                      ? 'border-rose-200 bg-rose-50 text-rose-700 animate-pulse'
+                      : 'border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100'
+                  }`}
+                >
+                  <span aria-hidden="true">🎙️</span>
+                  {isListening ? 'Listening…' : 'Dictate'}
+                </button>
+              </div>
               <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
                 Lesson input
               </span>
@@ -290,6 +410,15 @@ function App() {
                 <span aria-hidden="true">🔊</span>
                 {isSpeaking ? 'Stop reading' : 'Read Aloud'}
               </button>
+              <select
+                value={playbackRate}
+                onChange={(e) => setPlaybackRate(Number(e.target.value))}
+                className="rounded-full border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+              >
+                <option value={0.75}>0.75× Slow</option>
+                <option value={1}>1× Normal</option>
+                <option value={1.25}>1.25× Fast</option>
+              </select>
               <button
                 type="button"
                 onClick={handleCopy}
@@ -298,6 +427,15 @@ function App() {
               >
                 <span aria-hidden="true">{isCopied ? '✓' : '📋'}</span>
                 {isCopied ? 'Copied!' : 'Copy'}
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveLesson}
+                disabled={!hindiText.trim() || hindiHasError || savedLessons.some((item) => item.english === englishText.trim() && item.lang === targetLang)}
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 shadow-sm transition hover:bg-amber-100 focus:outline-none focus:ring-4 focus:ring-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <span aria-hidden="true">{savedLessons.some((item) => item.english === englishText.trim() && item.lang === targetLang) ? '✓' : '🔖'}</span>
+                {savedLessons.some((item) => item.english === englishText.trim() && item.lang === targetLang) ? 'Saved' : 'Save'}
               </button>
               {speechError ? (
                 <p className="text-sm text-rose-600" role="alert">
@@ -351,6 +489,72 @@ function App() {
           >
             Clear
           </button>
+        </div>
+
+        {/* Saved Classroom Vocabulary */}
+        <div className="mt-10">
+          <button
+            type="button"
+            onClick={() => setShowSaved((prev) => !prev)}
+            className="flex items-center gap-2 text-sm font-semibold text-slate-700 transition hover:text-slate-900"
+          >
+            <span className="transition-transform" style={{ display: 'inline-block', transform: showSaved ? 'rotate(90deg)' : 'rotate(0deg)' }}>▶</span>
+            Saved Classroom Vocabulary
+            <span className="rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-medium text-sky-700">
+              {savedLessons.length}
+            </span>
+          </button>
+
+          {showSaved && (
+            <div className="mt-4 space-y-3">
+              {savedLessons.length === 0 ? (
+                <p className="text-sm text-slate-400">No saved vocabulary yet. Translate a lesson and click Save.</p>
+              ) : (
+                <>
+                  {savedLessons.map((item) => {
+                    const lang = LANGUAGES.find((l) => l.code === item.lang)
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex flex-wrap items-start gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
+                      >
+                        <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                          {lang?.label || item.lang}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-slate-800">{item.english}</p>
+                          <p className="mt-1 text-sm text-slate-500">{item.translated}</p>
+                        </div>
+                        <div className="flex shrink-0 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleLoadLesson(item)}
+                            className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700 transition hover:bg-sky-100"
+                          >
+                            Load
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteLesson(item.id)}
+                            className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-medium text-rose-700 transition hover:bg-rose-100"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                  <button
+                    type="button"
+                    onClick={handleClearAllSaved}
+                    className="mt-2 rounded-full border border-slate-200 bg-white px-5 py-2 text-xs font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50"
+                  >
+                    Clear All Saved
+                  </button>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </main>
     </div>
