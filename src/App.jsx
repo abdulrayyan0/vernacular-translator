@@ -410,56 +410,60 @@ function App() {
           {/* Source Lesson Card */}
           <section className="flex min-h-[24rem] flex-col rounded-3xl border border-slate-200/80 border-t-4 border-t-blue-500 bg-white p-6 shadow-sm hover:shadow-md transition-all">
             {/* Source Header */}
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <div className="relative inline-flex items-center">
-                  <span className="absolute left-3 text-xs pointer-events-none" aria-hidden="true">
-                    🌐
-                  </span>
-                  <select
-                    value={sourceLang}
-                    onChange={handleSourceLangChange}
-                    className="custom-select custom-select-source pl-7 pr-8 font-bold text-sm shadow-xs"
-                    aria-label="Source Language"
-                  >
-                    {LANGUAGES.map((lang) => (
-                      <option key={lang.code} value={lang.code}>
-                        {lang.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Voice Input (Speech-to-Text) */}
-                <button
-                  type="button"
-                  onClick={handleMicToggle}
-                  aria-pressed={isListening}
-                  className={`tactile-btn chip-blue px-3.5 py-1.5 text-xs font-bold ${
-                    isListening ? 'mic-recording' : ''
-                  }`}
-                  title="Dictate lesson with microphone voice input"
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              {/* Clean Language Selector */}
+              <div className="relative inline-flex items-center">
+                <select
+                  value={sourceLang}
+                  onChange={handleSourceLangChange}
+                  className="appearance-none rounded-full bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100 pl-4 pr-8 py-1.5 text-sm font-bold shadow-xs outline-none cursor-pointer transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200"
+                  aria-label="Source Language"
                 >
-                  <span aria-hidden="true">🎙️</span>
-                  <span>{isListening ? 'Listening…' : 'Dictate'}</span>
-                </button>
-
-                {/* Pronounce Source Lesson */}
-                <button
-                  type="button"
-                  onClick={handleListenSource}
-                  disabled={!inputText.trim()}
-                  className="tactile-btn chip-blue px-3 py-1.5 text-xs font-bold"
-                  title="Pronounce source lesson"
+                  {LANGUAGES.map((lang) => (
+                    <option key={lang.code} value={lang.code} className="text-slate-800 bg-white font-medium">
+                      {lang.label}
+                    </option>
+                  ))}
+                </select>
+                <svg
+                  className="pointer-events-none absolute right-2.5 h-4 w-4 text-blue-600"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
                 >
-                  <span aria-hidden="true">🔊</span>
-                  <span>Listen</span>
-                </button>
+                  <path
+                    fillRule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                    clipRule="evenodd"
+                  />
+                </svg>
               </div>
 
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200/80 px-3 py-1 text-xs font-bold text-blue-700">
-                <span>📘</span> Source
-              </span>
+              {/* Voice Input (Speech-to-Text) */}
+              <button
+                type="button"
+                onClick={handleMicToggle}
+                aria-pressed={isListening}
+                className={`tactile-btn chip-blue px-3.5 py-1.5 text-xs font-bold ${
+                  isListening ? 'mic-recording' : ''
+                }`}
+                title="Dictate lesson with microphone voice input"
+              >
+                <span aria-hidden="true">🎙️</span>
+                <span>{isListening ? 'Listening…' : 'Dictate'}</span>
+              </button>
+
+              {/* Pronounce Source Lesson */}
+              <button
+                type="button"
+                onClick={handleListenSource}
+                disabled={!inputText.trim()}
+                className="tactile-btn chip-blue px-3 py-1.5 text-xs font-bold"
+                title="Pronounce source lesson"
+              >
+                <span aria-hidden="true">🔊</span>
+                <span>Listen</span>
+              </button>
             </div>
 
             <label htmlFor="source-lesson" className="sr-only">
@@ -501,46 +505,79 @@ function App() {
           {/* Vernacular Target Output Card */}
           <section className="flex min-h-[24rem] flex-col rounded-3xl border border-slate-200/80 border-t-4 border-t-amber-500 bg-white p-6 shadow-sm hover:shadow-md transition-all">
             {/* Target Header */}
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <div className="relative inline-flex items-center">
-                  <span className="absolute left-3 text-xs pointer-events-none" aria-hidden="true">
-                    🌐
-                  </span>
-                  <select
-                    value={targetLang}
-                    onChange={handleTargetLangChange}
-                    className="custom-select custom-select-target pl-7 pr-8 font-bold text-sm shadow-xs"
-                    aria-label="Target Vernacular Language"
-                  >
-                    {LANGUAGES.map((lang) => (
-                      <option key={lang.code} value={lang.code}>
-                        {lang.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              {/* Clean Language Selector */}
+              <div className="relative inline-flex items-center">
+                <select
+                  value={targetLang}
+                  onChange={handleTargetLangChange}
+                  className="appearance-none rounded-full bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 pl-4 pr-8 py-1.5 text-sm font-bold shadow-xs outline-none cursor-pointer transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
+                  aria-label="Target Vernacular Language"
+                >
+                  {LANGUAGES.map((lang) => (
+                    <option key={lang.code} value={lang.code} className="text-slate-800 bg-white font-medium">
+                      {lang.label}
+                    </option>
+                  ))}
+                </select>
+                <svg
+                  className="pointer-events-none absolute right-2.5 h-4 w-4 text-amber-700"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                    clipRule="evenodd"
+                  />
+                </svg>
               </div>
-
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200/80 px-3 py-1 text-xs font-bold text-amber-800">
-                <span>📙</span> Target Vernacular
-              </span>
             </div>
 
             <label htmlFor="translated-lesson" className="sr-only">
               {activeTargetLang.label} translation
             </label>
-            <textarea
-              id="translated-lesson"
-              value={outputText}
-              readOnly
-              placeholder={`${activeTargetLang.label} translation will appear here.`}
-              className={`classroom-textarea min-h-[17rem] flex-1 resize-none rounded-2xl border p-4 leading-relaxed outline-none transition placeholder:text-slate-400 ${
-                outputHasError
-                  ? 'border-rose-300 bg-rose-50/40 text-rose-700'
-                  : 'border-slate-200/90 bg-amber-50/20 text-slate-800'
-              }`}
-            />
+            <div className="relative flex flex-1 flex-col">
+              <textarea
+                id="translated-lesson"
+                value={outputText}
+                readOnly
+                placeholder={isTranslating ? '' : `${activeTargetLang.label} translation will appear here.`}
+                className={`classroom-textarea min-h-[17rem] flex-1 resize-none rounded-2xl border p-4 leading-relaxed outline-none transition placeholder:text-slate-400 ${
+                  outputHasError
+                    ? 'border-rose-300 bg-rose-50/40 text-rose-700'
+                    : 'border-slate-200/90 bg-amber-50/20 text-slate-800'
+                }`}
+              />
+              {isTranslating ? (
+                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-white/70 backdrop-blur-xs">
+                  <svg
+                    className="h-7 w-7 animate-spin text-amber-500"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    />
+                  </svg>
+                  <span className="mt-2 text-xs font-bold text-amber-900">
+                    Translating lesson…
+                  </span>
+                </div>
+              ) : null}
+            </div>
 
             {/* Target Card Audio & Utility Actions */}
             <div className="mt-4 flex flex-wrap items-center gap-2.5">
