@@ -361,70 +361,107 @@ function App() {
   )
 
   return (
-    <div className="min-h-svh bg-gradient-to-br from-sky-50 via-white to-amber-50 text-slate-800">
-      <header className="border-b border-sky-100/80 bg-white/80 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-5">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-600 text-lg font-bold text-white shadow-sm">
-            वा
+    <div className="classroom-canvas min-h-svh text-slate-800 flex flex-col font-sans">
+      {/* Classroom Header */}
+      <header className="sticky top-0 z-20 border-b border-amber-200/50 bg-white/85 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-xl font-extrabold text-white shadow-md shadow-blue-500/25">
+              वा
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200/70 px-2.5 py-0.5 text-[0.6875rem] font-bold uppercase tracking-wider text-blue-700">
+                  <span>🎓</span> Primary Classroom
+                </span>
+                <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200/70 px-2.5 py-0.5 text-[0.6875rem] font-bold uppercase tracking-wider text-amber-800">
+                  <span>✨</span> Bilingual Pedagogy
+                </span>
+              </div>
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 mt-0.5">
+                Vernacular Pedagogy Assistant
+              </h1>
+            </div>
           </div>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-              Primary classroom
-            </p>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
-              Vernacular Pedagogy Assistant
-            </h1>
+          <div className="hidden md:flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/90 px-3 py-1.5 text-xs font-bold text-slate-600 shadow-xs">
+              <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+              Smartboard Ready
+            </span>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-10">
-        <p className="mb-8 max-w-2xl text-base leading-relaxed text-slate-600">
-          Write a lesson in any language, then translate it into a vernacular
-          language for young learners in the classroom.
-        </p>
+      {/* Main Educator Workspace */}
+      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-bold text-slate-800">
+              Interactive Lesson Translator & Speech Studio
+            </h2>
+            <p className="text-sm text-slate-600 mt-0.5">
+              Translate teaching prompts into regional vernaculars with crystal-clear audio pronunciation.
+            </p>
+          </div>
+        </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_auto_1fr]">
-          {/* Source Input Card */}
-          <section className="flex min-h-[22rem] flex-col rounded-3xl border border-sky-100 bg-white p-6 shadow-sm shadow-sky-100/80">
-            <div className="mb-4 flex items-center justify-between">
+        {/* Dual-Column Translation Cards */}
+        <div className="grid gap-6 lg:grid-cols-[1fr_auto_1fr] items-stretch">
+          {/* Source Lesson Card */}
+          <section className="flex min-h-[24rem] flex-col rounded-3xl border border-slate-200/80 border-t-4 border-t-blue-500 bg-white p-6 shadow-sm hover:shadow-md transition-all">
+            {/* Source Header */}
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <select
-                  value={sourceLang}
-                  onChange={handleSourceLangChange}
-                  className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-semibold text-slate-900 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-                >
-                  {LANGUAGES.map((lang) => (
-                    <option key={lang.code} value={lang.code}>
-                      {lang.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative inline-flex items-center">
+                  <span className="absolute left-3 text-xs pointer-events-none" aria-hidden="true">
+                    🌐
+                  </span>
+                  <select
+                    value={sourceLang}
+                    onChange={handleSourceLangChange}
+                    className="custom-select custom-select-source pl-7 pr-8 font-bold text-sm shadow-xs"
+                    aria-label="Source Language"
+                  >
+                    {LANGUAGES.map((lang) => (
+                      <option key={lang.code} value={lang.code}>
+                        {lang.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Voice Input (Speech-to-Text) */}
                 <button
                   type="button"
                   onClick={handleMicToggle}
                   aria-pressed={isListening}
-                  className={`inline-flex items-center justify-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-sky-100 ${isListening
-                    ? 'border-rose-200 bg-rose-50 text-rose-700 animate-pulse'
-                    : 'border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100'
-                    }`}
+                  className={`tactile-btn chip-blue px-3.5 py-1.5 text-xs font-bold ${
+                    isListening ? 'mic-recording' : ''
+                  }`}
+                  title="Dictate lesson with microphone voice input"
                 >
                   <span aria-hidden="true">🎙️</span>
-                  {isListening ? 'Listening…' : 'Dictate'}
+                  <span>{isListening ? 'Listening…' : 'Dictate'}</span>
                 </button>
+
+                {/* Pronounce Source Lesson */}
                 <button
                   type="button"
                   onClick={handleListenSource}
                   disabled={!inputText.trim()}
-                  className="inline-flex items-center justify-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700 shadow-sm transition hover:bg-sky-100 focus:outline-none focus:ring-2 focus:ring-sky-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="tactile-btn chip-blue px-3 py-1.5 text-xs font-bold"
+                  title="Pronounce source lesson"
                 >
                   <span aria-hidden="true">🔊</span>
+                  <span>Listen</span>
                 </button>
               </div>
-              <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
-                Source
+
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200/80 px-3 py-1 text-xs font-bold text-blue-700">
+                <span>📘</span> Source
               </span>
             </div>
+
             <label htmlFor="source-lesson" className="sr-only">
               {activeSourceLang.label} lesson
             </label>
@@ -433,42 +470,63 @@ function App() {
               value={inputText}
               onChange={(event) => setInputText(event.target.value)}
               placeholder={activeSourceLang.placeholder}
-              className="min-h-[16rem] flex-1 resize-none rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-base leading-relaxed text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
+              className="classroom-textarea min-h-[17rem] flex-1 resize-none rounded-2xl border border-slate-200/90 bg-slate-50/50 p-4 leading-relaxed text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
             />
+
+            <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
+              <span>
+                {inputText.trim()
+                  ? `${inputText.trim().split(/\s+/).filter(Boolean).length} words`
+                  : 'Ready to type or dictate'}
+              </span>
+              <span className="font-medium text-slate-400">
+                ✨ Clear display for classroom view
+              </span>
+            </div>
           </section>
 
-          {/* Swap Button */}
-          <div className="flex items-center justify-center lg:flex-col">
+          {/* Swap Controls */}
+          <div className="flex items-center justify-center lg:flex-col py-1">
             <button
               type="button"
               onClick={handleSwapLanguages}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-lg text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-4 focus:ring-sky-100"
-              title="Swap languages"
+              className="tactile-btn h-12 w-12 rounded-full border border-slate-200 bg-white text-slate-600 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50/60 shadow-sm hover:shadow-md transition-all text-xl"
+              title="Swap source & target languages"
+              aria-label="Swap source and target languages"
             >
               ⇄
             </button>
           </div>
 
-          {/* Target Output Card */}
-          <section className="flex min-h-[22rem] flex-col rounded-3xl border border-amber-100 bg-white p-6 shadow-sm shadow-amber-100/80">
-            <div className="mb-4 flex items-center justify-between">
+          {/* Vernacular Target Output Card */}
+          <section className="flex min-h-[24rem] flex-col rounded-3xl border border-slate-200/80 border-t-4 border-t-amber-500 bg-white p-6 shadow-sm hover:shadow-md transition-all">
+            {/* Target Header */}
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <select
-                  value={targetLang}
-                  onChange={handleTargetLangChange}
-                  className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-semibold text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
-                >
-                  {LANGUAGES.map((lang) => (
-                    <option key={lang.code} value={lang.code}>
-                      {lang.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative inline-flex items-center">
+                  <span className="absolute left-3 text-xs pointer-events-none" aria-hidden="true">
+                    🌐
+                  </span>
+                  <select
+                    value={targetLang}
+                    onChange={handleTargetLangChange}
+                    className="custom-select custom-select-target pl-7 pr-8 font-bold text-sm shadow-xs"
+                    aria-label="Target Vernacular Language"
+                  >
+                    {LANGUAGES.map((lang) => (
+                      <option key={lang.code} value={lang.code}>
+                        {lang.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800">
-                Target
+
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200/80 px-3 py-1 text-xs font-bold text-amber-800">
+                <span>📙</span> Target Vernacular
               </span>
             </div>
+
             <label htmlFor="translated-lesson" className="sr-only">
               {activeTargetLang.label} translation
             </label>
@@ -477,69 +535,99 @@ function App() {
               value={outputText}
               readOnly
               placeholder={`${activeTargetLang.label} translation will appear here.`}
-              className={`min-h-[16rem] flex-1 resize-none rounded-2xl border bg-amber-50/40 p-4 text-base leading-relaxed outline-none placeholder:text-slate-400 ${outputHasError
-                ? 'border-rose-200 text-rose-700'
-                : 'border-slate-200 text-slate-800'
-                }`}
+              className={`classroom-textarea min-h-[17rem] flex-1 resize-none rounded-2xl border p-4 leading-relaxed outline-none transition placeholder:text-slate-400 ${
+                outputHasError
+                  ? 'border-rose-300 bg-rose-50/40 text-rose-700'
+                  : 'border-slate-200/90 bg-amber-50/20 text-slate-800'
+              }`}
             />
-            <div className="mt-4 flex flex-wrap items-center gap-3">
+
+            {/* Target Card Audio & Utility Actions */}
+            <div className="mt-4 flex flex-wrap items-center gap-2.5">
+              {/* Read Aloud */}
               <button
                 type="button"
                 onClick={handleReadAloud}
                 aria-pressed={isSpeaking}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 shadow-sm transition hover:bg-amber-100 focus:outline-none focus:ring-4 focus:ring-amber-100"
+                className={`tactile-btn chip-amber px-4 py-2 text-sm font-bold ${
+                  isSpeaking ? 'chip-speaking' : ''
+                }`}
+                title="Listen to native vernacular pronunciation"
               >
-                <span aria-hidden="true">🔊</span>
-                {isSpeaking ? 'Stop reading' : 'Read Aloud'}
+                {isSpeaking ? (
+                  <span className="soundwave text-amber-900" aria-hidden="true">
+                    <span className="soundwave-bar"></span>
+                    <span className="soundwave-bar"></span>
+                    <span className="soundwave-bar"></span>
+                    <span className="soundwave-bar"></span>
+                  </span>
+                ) : (
+                  <span aria-hidden="true">🔊</span>
+                )}
+                <span>{isSpeaking ? 'Stop Reading' : 'Read Aloud'}</span>
               </button>
+
+              {/* Speed Toggle */}
               <select
                 value={playbackRate}
                 onChange={(e) => setPlaybackRate(Number(e.target.value))}
-                className="rounded-full border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                className="tactile-btn chip-amber px-3 py-2 text-xs font-bold cursor-pointer outline-none"
+                title="Classroom playback speed"
+                aria-label="Speech Playback Speed"
               >
-                <option value={0.75}>0.75× Slow</option>
-                <option value={1}>1× Normal</option>
-                <option value={1.25}>1.25× Fast</option>
+                <option value={0.75}>🐢 0.75× Slow</option>
+                <option value={1}>⚡ 1× Normal</option>
+                <option value={1.25}>🐰 1.25× Fast</option>
               </select>
+
+              {/* Copy Action */}
               <button
                 type="button"
                 onClick={handleCopy}
                 disabled={!outputText.trim() || outputHasError}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 shadow-sm transition hover:bg-amber-100 focus:outline-none focus:ring-4 focus:ring-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="tactile-btn chip-amber px-3.5 py-2 text-sm font-bold"
+                title="Copy translated lesson to clipboard"
               >
                 <span aria-hidden="true">{isCopied ? '✓' : '📋'}</span>
-                {isCopied ? 'Copied!' : 'Copy'}
+                <span>{isCopied ? 'Copied!' : 'Copy'}</span>
               </button>
+
+              {/* Save Lesson Vocabulary */}
               <button
                 type="button"
                 onClick={handleSaveLesson}
                 disabled={!outputText.trim() || outputHasError || isAlreadySaved}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 shadow-sm transition hover:bg-amber-100 focus:outline-none focus:ring-4 focus:ring-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="tactile-btn chip-amber px-3.5 py-2 text-sm font-bold"
+                title={isAlreadySaved ? 'Already saved in vocabulary' : 'Save to lesson vocabulary'}
               >
                 <span aria-hidden="true">{isAlreadySaved ? '✓' : '🔖'}</span>
-                {isAlreadySaved ? 'Saved' : 'Save'}
+                <span>{isAlreadySaved ? 'Saved' : 'Save'}</span>
               </button>
-              {speechError ? (
-                <p className="text-sm text-rose-600" role="alert">
-                  {speechError}
-                </p>
-              ) : null}
             </div>
+
+            {speechError ? (
+              <div className="mt-2.5">
+                <span className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700" role="alert">
+                  <span>⚠️</span> {speechError}
+                </span>
+              </div>
+            ) : null}
           </section>
         </div>
 
-        <div className="mt-8 flex flex-wrap items-center gap-3">
+        {/* Primary Bottom Action Controls */}
+        <div className="mt-8 flex flex-wrap items-center gap-3.5">
           <button
             type="button"
             onClick={handleTranslate}
             disabled={isTranslating}
             aria-busy={isTranslating}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-600 px-7 py-3 text-sm font-semibold text-white shadow-md shadow-sky-200 transition hover:bg-sky-700 focus:outline-none focus:ring-4 focus:ring-sky-200 disabled:cursor-not-allowed disabled:bg-sky-400"
+            className="tactile-btn btn-translate px-8 py-3.5 text-base font-extrabold"
           >
             {isTranslating ? (
               <>
                 <svg
-                  className="h-4 w-4 animate-spin"
+                  className="h-5 w-5 animate-spin"
                   viewBox="0 0 24 24"
                   fill="none"
                   aria-hidden="true"
@@ -558,93 +646,133 @@ function App() {
                     d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
                   />
                 </svg>
-                Translating…
+                <span>Translating…</span>
               </>
             ) : (
-              'Translate Lesson'
+              <>
+                <span>✨</span>
+                <span>Translate Lesson</span>
+              </>
             )}
           </button>
+
           <button
             type="button"
             onClick={handleClear}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-7 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-100"
+            className="tactile-btn btn-clear px-6 py-3.5 text-base font-bold"
+            title="Clear current lesson text"
           >
-            Clear
+            <span>🧹</span>
+            <span>Clear</span>
           </button>
         </div>
 
-        {/* Saved Classroom Vocabulary */}
-        <div className="mt-10">
+        {/* Saved Classroom Vocabulary Drawer */}
+        <section className="mt-10 rounded-3xl border border-slate-200/80 bg-white/90 backdrop-blur-sm p-6 shadow-sm hover:shadow-md transition-shadow">
           <button
             type="button"
             onClick={() => setShowSaved((prev) => !prev)}
-            className="flex items-center gap-2 text-sm font-semibold text-slate-700 transition hover:text-slate-900"
+            className="tactile-btn w-full flex items-center justify-between text-left p-1 text-slate-800 hover:text-blue-700 transition-colors"
           >
-            <span className="transition-transform" style={{ display: 'inline-block', transform: showSaved ? 'rotate(90deg)' : 'rotate(0deg)' }}>▶</span>
-            Saved Classroom Vocabulary
-            <span className="rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-medium text-sky-700">
-              {savedLessons.length}
+            <div className="flex items-center gap-2.5 text-base font-extrabold">
+              <span className="text-xl">📚</span>
+              <span>Saved Classroom Vocabulary</span>
+              <span className="inline-flex items-center justify-center rounded-full bg-blue-100 text-blue-700 px-2.5 py-0.5 text-xs font-black">
+                {savedLessons.length}
+              </span>
+            </div>
+            <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full transition-colors">
+              <span>{showSaved ? 'Collapse' : 'Expand'}</span>
+              <span
+                className="transition-transform duration-200 text-[0.65rem]"
+                style={{
+                  display: 'inline-block',
+                  transform: showSaved ? 'rotate(180deg)' : 'rotate(0deg)',
+                }}
+              >
+                ▼
+              </span>
             </span>
           </button>
 
           {showSaved && (
-            <div className="mt-4 space-y-3">
+            <div className="mt-5 space-y-3 pt-2 border-t border-slate-100">
               {savedLessons.length === 0 ? (
-                <p className="text-sm text-slate-400">No saved vocabulary yet. Translate a lesson and click Save.</p>
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-6 text-center">
+                  <p className="text-3xl mb-1.5">🎒</p>
+                  <p className="text-sm font-bold text-slate-700">No saved vocabulary yet</p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Translate a lesson prompt above and click "Save" to build your classroom quick-reference deck.
+                  </p>
+                </div>
               ) : (
                 <>
-                  {savedLessons.map((item) => {
-                    const srcLang = LANGUAGES.find((l) => l.code === item.sourceLang)
-                    const tgtLang = LANGUAGES.find((l) => l.code === item.lang)
-                    return (
-                      <div
-                        key={item.id}
-                        className="flex flex-wrap items-start gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
-                      >
-                        <div className="flex shrink-0 items-center gap-1">
-                          <span className="rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700">
-                            {srcLang?.label || item.sourceLang || 'EN'}
-                          </span>
-                          <span className="text-xs text-slate-400">→</span>
-                          <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-800">
-                            {tgtLang?.label || item.lang}
-                          </span>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {savedLessons.map((item) => {
+                      const srcLang = LANGUAGES.find((l) => l.code === item.sourceLang)
+                      const tgtLang = LANGUAGES.find((l) => l.code === item.lang)
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-4 shadow-xs hover:shadow-md transition-shadow"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-1 mb-2">
+                              <div className="flex items-center gap-1.5">
+                                <span className="rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-[0.6875rem] font-bold text-blue-700">
+                                  {srcLang?.label || item.sourceLang || 'EN'}
+                                </span>
+                                <span className="text-xs text-slate-400 font-bold">➔</span>
+                                <span className="rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[0.6875rem] font-bold text-amber-800">
+                                  {tgtLang?.label || item.lang}
+                                </span>
+                              </div>
+                            </div>
+                            <p className="text-sm font-bold text-slate-800 line-clamp-2">
+                              {item.english}
+                            </p>
+                            <p className="mt-1 text-sm font-medium text-slate-600 line-clamp-2">
+                              {item.translated}
+                            </p>
+                          </div>
+
+                          <div className="mt-4 flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                            <button
+                              type="button"
+                              onClick={() => handleLoadLesson(item)}
+                              className="tactile-btn chip-blue px-3 py-1 text-xs font-bold"
+                              title="Load lesson onto board"
+                            >
+                              <span>📥 Load</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteLesson(item.id)}
+                              className="tactile-btn px-3 py-1 text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-full"
+                              title="Delete this saved card"
+                            >
+                              <span>🗑️ Delete</span>
+                            </button>
+                          </div>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-slate-800">{item.english}</p>
-                          <p className="mt-1 text-sm text-slate-500">{item.translated}</p>
-                        </div>
-                        <div className="flex shrink-0 gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleLoadLesson(item)}
-                            className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700 transition hover:bg-sky-100"
-                          >
-                            Load
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteLesson(item.id)}
-                            className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-medium text-rose-700 transition hover:bg-rose-100"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  })}
-                  <button
-                    type="button"
-                    onClick={handleClearAllSaved}
-                    className="mt-2 rounded-full border border-slate-200 bg-white px-5 py-2 text-xs font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50"
-                  >
-                    Clear All Saved
-                  </button>
+                      )
+                    })}
+                  </div>
+
+                  <div className="mt-4 pt-3 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleClearAllSaved}
+                      className="tactile-btn px-4 py-2 text-xs font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 rounded-full transition-colors"
+                    >
+                      Clear All Saved
+                    </button>
+                  </div>
                 </>
               )}
             </div>
           )}
-        </div>
+        </section>
       </main>
     </div>
   )
