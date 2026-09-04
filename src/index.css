@@ -1,9 +1,275 @@
 @import "tailwindcss";
 
+:root {
+  font-family: 'Nunito', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --bg-canvas: #fdfbf7;
+  --color-primary: #3b82f6;
+  --color-accent: #f59e0b;
+}
+
 body {
   margin: 0;
+  background-color: #fdfbf7;
+  color: #1e293b;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
   min-height: 100svh;
+}
+
+/* Warm canvas background with subtle playful lighting */
+.classroom-canvas {
+  min-height: 100svh;
+  background-color: #fdfbf7;
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.04) 0%, transparent 45%),
+    radial-gradient(circle at 85% 20%, rgba(245, 158, 11, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 50% 90%, rgba(99, 102, 241, 0.03) 0%, transparent 50%);
+}
+
+/* Tactile pill buttons with subtle 3D lift & press */
+.tactile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.tactile-btn:active {
+  transform: scale(0.95);
+}
+
+.tactile-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Primary action button (Translate) */
+.btn-translate {
+  background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);
+  color: #ffffff;
+  box-shadow: 
+    0 4px 12px rgba(59, 130, 246, 0.28),
+    0 2px 4px rgba(79, 70, 229, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-translate:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #4338ca 100%);
+  box-shadow: 
+    0 6px 16px rgba(59, 130, 246, 0.35),
+    0 2px 6px rgba(79, 70, 229, 0.2);
+  transform: translateY(-1px);
+}
+
+.btn-translate:active:not(:disabled) {
+  transform: translateY(1px) scale(0.96);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
+}
+
+/* Secondary clear button */
+.btn-clear {
+  background: #ffffff;
+  color: #475569;
+  border: 1.5px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.btn-clear:hover {
+  background: #f8fafc;
+  color: #1e293b;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.btn-clear:active {
+  transform: scale(0.96);
+}
+
+/* Amber audio / action chips */
+.chip-amber {
+  background: linear-gradient(180deg, #fffdfa 0%, #fffbeb 100%);
+  border: 1.5px solid #fde68a;
+  color: #92400e;
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.1);
+}
+
+.chip-amber:hover:not(:disabled) {
+  background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #fcd34d;
+  color: #78350f;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.18);
+}
+
+.chip-amber:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+/* Blue speech / dictation chips */
+.chip-blue {
+  background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
+  border: 1.5px solid #bfdbfe;
+  color: #1d4ed8;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.1);
+}
+
+.chip-blue:hover:not(:disabled) {
+  background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+  border-color: #93c5fd;
+  color: #1e40af;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
+.chip-blue:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+/* Microphone active recording state with pulsing red ring */
+@keyframes soft-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.mic-recording {
+  background: #fef2f2 !important;
+  border-color: #fca5a5 !important;
+  color: #dc2626 !important;
+  animation: soft-pulse-ring 1.6s ease-out infinite;
+}
+
+/* Speaking glowing indicator */
+@keyframes speaking-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+  }
+}
+
+.chip-speaking {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+  border-color: #f59e0b !important;
+  color: #78350f !important;
+  animation: speaking-pulse 1.5s ease-in-out infinite;
+}
+
+/* Animated Soundwave bars */
+.soundwave {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 14px;
+}
+
+.soundwave-bar {
+  display: block;
+  width: 2.5px;
+  background-color: currentColor;
+  border-radius: 9999px;
+  animation: soundwave-anim 1s ease-in-out infinite alternate;
+}
+
+.soundwave-bar:nth-child(1) {
+  height: 8px;
+  animation-delay: 0.1s;
+}
+
+.soundwave-bar:nth-child(2) {
+  height: 14px;
+  animation-delay: 0.3s;
+}
+
+.soundwave-bar:nth-child(3) {
+  height: 6px;
+  animation-delay: 0.2s;
+}
+
+.soundwave-bar:nth-child(4) {
+  height: 11px;
+  animation-delay: 0.4s;
+}
+
+@keyframes soundwave-anim {
+  0% {
+    transform: scaleY(0.4);
+  }
+  100% {
+    transform: scaleY(1.2);
+  }
+}
+
+/* Custom styled badge select */
+.custom-select {
+  appearance: none;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 0.4rem 2rem 0.4rem 0.85rem;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  background-size: 0.9rem;
+}
+
+.custom-select-source {
+  border: 1.5px solid #bfdbfe;
+  background-color: #eff6ff;
+  color: #1e40af;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%232563eb'%3e%3cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd' /%3e%3c/svg%3e");
+}
+
+.custom-select-source:hover {
+  background-color: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.custom-select-source:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.custom-select-target {
+  border: 1.5px solid #fde68a;
+  background-color: #fffbeb;
+  color: #92400e;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23d97706'%3e%3cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd' /%3e%3c/svg%3e");
+}
+
+.custom-select-target:hover {
+  background-color: #fef3c7;
+  border-color: #fcd34d;
+}
+
+.custom-select-target:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+
+/* Classroom smartboard readable textarea */
+.classroom-textarea {
+  font-size: 1.15rem;
+  line-height: 1.8;
+  letter-spacing: 0.01em;
+  font-family: 'Nunito', 'Inter', system-ui, sans-serif;
+  font-weight: 500;
 }
