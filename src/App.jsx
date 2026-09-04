@@ -24,38 +24,57 @@ function App() {
   }, [])
 
   async function handleTranslate() {
-    const lesson = englishText.trim()
-    if (!lesson) {
-      setHindiHasError(true)
-      setHindiText('Please enter an English lesson first.')
-      return
-    }
+    const trimmed = englishText.trim()
+    if (!trimmed) return
 
     setHindiHasError(false)
     setSpeechError('')
     setIsTranslating(true)
     stopAudio(audioRef.current)
-    audioRef.current = null
     setIsSpeaking(false)
 
     try {
-      const response = await fetch(
-        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(lesson)}&langpair=en|hi`,
-      )
+      // Primary: Google gtx endpoint
+      try {
+        const gtxResponse = await fetch(
+          `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q=${encodeURIComponent(trimmed)}`,
+        )
 
-      if (!response.ok) {
-        throw new Error('Request failed')
+        if (!gtxResponse.ok) {
+          throw new Error('Google translate request failed')
+        }
+
+        const gtxData = await gtxResponse.json()
+        const translated = gtxData[0]
+          .map((segment) => segment[0])
+          .filter(Boolean)
+          .join('')
+
+        if (!translated) {
+          throw new Error('No translation returned from Google')
+        }
+
+        setHindiText(translated)
+        return
+      } catch (gtxError) {
+        // Fallback: MyMemory API
+        const mmResponse = await fetch(
+          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(trimmed)}&langpair=en|hi`,
+        )
+
+        if (!mmResponse.ok) {
+          throw new Error('MyMemory request failed')
+        }
+
+        const mmData = await mmResponse.json()
+        const translated = mmData?.responseData?.translatedText?.trim()
+
+        if (!translated) {
+          throw new Error('No translation returned from MyMemory')
+        }
+
+        setHindiText(translated)
       }
-
-      const data = await response.json()
-      const translated = data?.responseData?.translatedText?.trim()
-
-      if (!translated) {
-        throw new Error('No translation returned')
-      }
-
-      setHindiHasError(false)
-      setHindiText(translated)
     } catch {
       setHindiHasError(true)
       setHindiText('Translation could not be completed. Please try again.')
@@ -176,11 +195,10 @@ function App() {
               value={hindiText}
               readOnly
               placeholder="Hindi translation will appear here."
-              className={`min-h-[16rem] flex-1 resize-none rounded-2xl border bg-amber-50/40 p-4 text-base leading-relaxed outline-none placeholder:text-slate-400 ${
-                hindiHasError
-                  ? 'border-rose-200 text-rose-700'
-                  : 'border-slate-200 text-slate-800'
-              }`}
+              className={`min-h-[16rem] flex-1 resize-none rounded-2xl border bg-amber-50/40 p-4 text-base leading-relaxed outline-none placeholder:text-slate-400 ${hindiHasError
+                ? 'border-rose-200 text-rose-700'
+                : 'border-slate-200 text-slate-800'
+                }`}
             />
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <button
