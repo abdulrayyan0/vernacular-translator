@@ -10,6 +10,13 @@ function stopAudio(audio) {
   audio.load()
 }
 
+const LANGUAGES = [
+  { code: 'hi', speechTag: 'hi-IN', label: 'हिन्दी' },
+  { code: 'te', speechTag: 'te-IN', label: 'తెలుగు' },
+  { code: 'ta', speechTag: 'ta-IN', label: 'தமிழ்' },
+  { code: 'mr', speechTag: 'mr-IN', label: 'मराठी' },
+]
+
 function App() {
   const [englishText, setEnglishText] = useState('')
   const [hindiText, setHindiText] = useState('')
@@ -18,7 +25,21 @@ function App() {
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [speechError, setSpeechError] = useState('')
   const [isCopied, setIsCopied] = useState(false)
+  const [targetLang, setTargetLang] = useState('hi')
   const audioRef = useRef(null)
+
+  const activeLang = LANGUAGES.find((l) => l.code === targetLang) || LANGUAGES[0]
+
+  function handleLangChange(event) {
+    setTargetLang(event.target.value)
+    setHindiText('')
+    setHindiHasError(false)
+    setSpeechError('')
+    setIsCopied(false)
+    stopAudio(audioRef.current)
+    audioRef.current = null
+    setIsSpeaking(false)
+  }
 
   useEffect(() => {
     return () => {
@@ -41,7 +62,7 @@ function App() {
       // Primary: Google gtx endpoint
       try {
         const gtxResponse = await fetch(
-          `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q=${encodeURIComponent(trimmed)}`,
+          `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${targetLang}&dt=t&q=${encodeURIComponent(trimmed)}`,
         )
 
         if (!gtxResponse.ok) {
@@ -63,7 +84,7 @@ function App() {
       } catch (gtxError) {
         // Fallback: MyMemory API
         const mmResponse = await fetch(
-          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(trimmed)}&langpair=en|hi`,
+          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(trimmed)}&langpair=en|${targetLang}`,
         )
 
         if (!mmResponse.ok) {
@@ -94,19 +115,19 @@ function App() {
     }
 
     const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = 'hi-IN'
+    utterance.lang = activeLang.speechTag
 
     const voices = window.speechSynthesis.getVoices()
-    const hindiVoice = voices.find((v) => v.lang.startsWith('hi'))
-    if (hindiVoice) {
-      utterance.voice = hindiVoice
+    const matchedVoice = voices.find((v) => v.lang.startsWith(activeLang.code))
+    if (matchedVoice) {
+      utterance.voice = matchedVoice
     }
 
     utterance.onstart = () => setIsSpeaking(true)
     utterance.onend = () => setIsSpeaking(false)
     utterance.onerror = () => {
       setIsSpeaking(false)
-      setSpeechError('Could not play the Hindi audio.')
+      setSpeechError('Could not play the audio.')
     }
 
     window.speechSynthesis.speak(utterance)
@@ -132,7 +153,7 @@ function App() {
     setSpeechError('')
     setIsSpeaking(false)
 
-    const audioUrl = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=hi&q=${encodeURIComponent(lesson)}`
+    const audioUrl = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${targetLang}&q=${encodeURIComponent(lesson)}`
 
     const audio = new Audio(audioUrl)
     audioRef.current = audio
@@ -202,8 +223,8 @@ function App() {
 
       <main className="mx-auto max-w-6xl px-6 py-10">
         <p className="mb-8 max-w-2xl text-base leading-relaxed text-slate-600">
-          Write a lesson in English, then translate it into Hindi for young
-          learners in the classroom.
+          Write a lesson in English, then translate it into a vernacular
+          language for young learners in the classroom.
         </p>
 
         <div className="grid gap-6 lg:grid-cols-2">
@@ -228,19 +249,32 @@ function App() {
 
           <section className="flex min-h-[22rem] flex-col rounded-3xl border border-amber-100 bg-white p-6 shadow-sm shadow-amber-100/80">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">हिन्दी</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-slate-900">{activeLang.label}</h2>
+                <select
+                  value={targetLang}
+                  onChange={handleLangChange}
+                  className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                >
+                  {LANGUAGES.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800">
                 Read only
               </span>
             </div>
-            <label htmlFor="hindi-lesson" className="sr-only">
-              Hindi translation
+            <label htmlFor="translated-lesson" className="sr-only">
+              {activeLang.label} translation
             </label>
             <textarea
-              id="hindi-lesson"
+              id="translated-lesson"
               value={hindiText}
               readOnly
-              placeholder="Hindi translation will appear here."
+              placeholder={`${activeLang.label} translation will appear here.`}
               className={`min-h-[16rem] flex-1 resize-none rounded-2xl border bg-amber-50/40 p-4 text-base leading-relaxed outline-none placeholder:text-slate-400 ${hindiHasError
                 ? 'border-rose-200 text-rose-700'
                 : 'border-slate-200 text-slate-800'
