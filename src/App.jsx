@@ -11,10 +11,11 @@ function stopAudio(audio) {
 }
 
 const LANGUAGES = [
-  { code: 'hi', speechTag: 'hi-IN', label: 'हिन्दी' },
-  { code: 'te', speechTag: 'te-IN', label: 'తెలుగు' },
-  { code: 'ta', speechTag: 'ta-IN', label: 'தமிழ்' },
-  { code: 'mr', speechTag: 'mr-IN', label: 'मराठी' },
+  { code: 'en', speechTag: 'en-US', label: 'English', placeholder: 'Type lesson in English...' },
+  { code: 'hi', speechTag: 'hi-IN', label: 'हिन्दी', placeholder: 'पाठ यहाँ लिखें...' },
+  { code: 'te', speechTag: 'te-IN', label: 'తెలుగు', placeholder: 'పాఠాన్ని ఇక్కడ టైప్ చేయండి...' },
+  { code: 'ta', speechTag: 'ta-IN', label: 'தமிழ்', placeholder: 'பாடத்தை இங்கே தட்டச்சு செய்க...' },
+  { code: 'mr', speechTag: 'mr-IN', label: 'मराठी', placeholder: 'धडा येथे टाइप करा...' },
 ]
 
 const SpeechRecognition =
@@ -23,13 +24,14 @@ const SpeechRecognition =
     : null
 
 function App() {
-  const [englishText, setEnglishText] = useState('')
-  const [hindiText, setHindiText] = useState('')
+  const [inputText, setInputText] = useState('')
+  const [outputText, setOutputText] = useState('')
   const [isTranslating, setIsTranslating] = useState(false)
-  const [hindiHasError, setHindiHasError] = useState(false)
+  const [outputHasError, setOutputHasError] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [speechError, setSpeechError] = useState('')
   const [isCopied, setIsCopied] = useState(false)
+  const [sourceLang, setSourceLang] = useState('en')
   const [targetLang, setTargetLang] = useState('hi')
   const [playbackRate, setPlaybackRate] = useState(1)
   const [isListening, setIsListening] = useState(false)
@@ -45,17 +47,52 @@ function App() {
   const audioRef = useRef(null)
   const recognitionRef = useRef(null)
 
-  const activeLang = LANGUAGES.find((l) => l.code === targetLang) || LANGUAGES[0]
+  const activeSourceLang = LANGUAGES.find((l) => l.code === sourceLang) || LANGUAGES[0]
+  const activeTargetLang = LANGUAGES.find((l) => l.code === targetLang) || LANGUAGES[1]
 
-  function handleLangChange(event) {
-    setTargetLang(event.target.value)
-    setHindiText('')
-    setHindiHasError(false)
-    setSpeechError('')
-    setIsCopied(false)
+  function resetPlayback() {
     stopAudio(audioRef.current)
     audioRef.current = null
     setIsSpeaking(false)
+  }
+
+  function handleSourceLangChange(event) {
+    const newSource = event.target.value
+    if (newSource === targetLang) {
+      setTargetLang(sourceLang)
+      setOutputText(inputText)
+    }
+    setSourceLang(newSource)
+    setOutputText('')
+    setOutputHasError(false)
+    setSpeechError('')
+    setIsCopied(false)
+    resetPlayback()
+  }
+
+  function handleTargetLangChange(event) {
+    const newTarget = event.target.value
+    if (newTarget === sourceLang) {
+      setSourceLang(targetLang)
+      setInputText(outputText)
+    }
+    setTargetLang(newTarget)
+    setOutputText('')
+    setOutputHasError(false)
+    setSpeechError('')
+    setIsCopied(false)
+    resetPlayback()
+  }
+
+  function handleSwapLanguages() {
+    setSourceLang(targetLang)
+    setTargetLang(sourceLang)
+    setInputText(outputText)
+    setOutputText(inputText)
+    setOutputHasError(false)
+    setSpeechError('')
+    setIsCopied(false)
+    resetPlayback()
   }
 
   useEffect(() => {
@@ -91,14 +128,14 @@ function App() {
     }
 
     const recognition = new SpeechRecognition()
-    recognition.lang = 'en-US'
+    recognition.lang = activeSourceLang.speechTag
     recognition.continuous = false
     recognition.interimResults = false
     recognitionRef.current = recognition
 
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript
-      setEnglishText((prev) => (prev ? prev + ' ' + transcript : transcript))
+      setInputText((prev) => (prev ? prev + ' ' + transcript : transcript))
     }
 
     recognition.onend = () => {
@@ -116,20 +153,24 @@ function App() {
   }
 
   async function handleTranslate() {
-    const trimmed = englishText.trim()
+    const trimmed = inputText.trim()
     if (!trimmed) return
 
-    setHindiHasError(false)
+    if (sourceLang === targetLang) {
+      setOutputText(trimmed)
+      return
+    }
+
+    setOutputHasError(false)
     setSpeechError('')
     setIsTranslating(true)
-    stopAudio(audioRef.current)
-    setIsSpeaking(false)
+    resetPlayback()
 
     try {
       // Primary: Google gtx endpoint
       try {
         const gtxResponse = await fetch(
-          `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${targetLang}&dt=t&q=${encodeURIComponent(trimmed)}`,
+          `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(trimmed)}`,
         )
 
         if (!gtxResponse.ok) {
@@ -146,12 +187,12 @@ function App() {
           throw new Error('No translation returned from Google')
         }
 
-        setHindiText(translated)
+        setOutputText(translated)
         return
       } catch (gtxError) {
         // Fallback: MyMemory API
         const mmResponse = await fetch(
-          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(trimmed)}&langpair=en|${targetLang}`,
+          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(trimmed)}&langpair=${sourceLang}|${targetLang}`,
         )
 
         if (!mmResponse.ok) {
@@ -165,28 +206,28 @@ function App() {
           throw new Error('No translation returned from MyMemory')
         }
 
-        setHindiText(translated)
+        setOutputText(translated)
       }
     } catch {
-      setHindiHasError(true)
-      setHindiText('Translation could not be completed. Please try again.')
+      setOutputHasError(true)
+      setOutputText('Translation could not be completed. Please try again.')
     } finally {
       setIsTranslating(false)
     }
   }
 
-  function speakWithSynthesis(text) {
+  function speakWithSynthesis(text, langConfig) {
     if (!window.speechSynthesis) {
       setSpeechError('Speech synthesis is not supported in this browser.')
       return
     }
 
     const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = activeLang.speechTag
+    utterance.lang = langConfig.speechTag
     utterance.rate = playbackRate
 
     const voices = window.speechSynthesis.getVoices()
-    const matchedVoice = voices.find((v) => v.lang.startsWith(activeLang.code))
+    const matchedVoice = voices.find((v) => v.lang.startsWith(langConfig.code))
     if (matchedVoice) {
       utterance.voice = matchedVoice
     }
@@ -201,25 +242,35 @@ function App() {
     window.speechSynthesis.speak(utterance)
   }
 
-  async function handleReadAloud() {
-    const lesson = hindiText.trim()
+  function handleListenSource() {
+    const text = inputText.trim()
+    if (!text) return
 
-    if (hindiHasError || !lesson) {
+    if (isSpeaking) {
+      resetPlayback()
+      return
+    }
+
+    resetPlayback()
+    setSpeechError('')
+    speakWithSynthesis(text, activeSourceLang)
+  }
+
+  async function handleReadAloud() {
+    const lesson = outputText.trim()
+
+    if (outputHasError || !lesson) {
       setSpeechError('Translate a lesson first, then try Read Aloud.')
       return
     }
 
     if (audioRef.current && !audioRef.current.paused) {
-      stopAudio(audioRef.current)
-      audioRef.current = null
-      setIsSpeaking(false)
+      resetPlayback()
       return
     }
 
-    stopAudio(audioRef.current)
-    audioRef.current = null
+    resetPlayback()
     setSpeechError('')
-    setIsSpeaking(false)
 
     const audioUrl = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${targetLang}&q=${encodeURIComponent(lesson)}`
 
@@ -239,7 +290,7 @@ function App() {
     audio.addEventListener('error', () => {
       // Google TTS failed — fall back to native speech synthesis
       audioRef.current = null
-      speakWithSynthesis(lesson)
+      speakWithSynthesis(lesson, activeTargetLang)
     })
 
     try {
@@ -247,13 +298,13 @@ function App() {
     } catch {
       // Network / CORS / decode failure — fall back to native speech synthesis
       audioRef.current = null
-      speakWithSynthesis(lesson)
+      speakWithSynthesis(lesson, activeTargetLang)
     }
   }
 
   async function handleCopy() {
     try {
-      await navigator.clipboard.writeText(hindiText)
+      await navigator.clipboard.writeText(outputText)
       setIsCopied(true)
       setTimeout(() => setIsCopied(false), 2000)
     } catch {
@@ -262,42 +313,39 @@ function App() {
   }
 
   function handleClear() {
-    setEnglishText('')
-    setHindiText('')
-    setHindiHasError(false)
+    setInputText('')
+    setOutputText('')
+    setOutputHasError(false)
     setSpeechError('')
     setIsCopied(false)
-    stopAudio(audioRef.current)
-    audioRef.current = null
-    setIsSpeaking(false)
+    resetPlayback()
   }
 
   function handleSaveLesson() {
-    const english = englishText.trim()
-    const translated = hindiText.trim()
-    if (!english || !translated || hindiHasError) return
+    const source = inputText.trim()
+    const translated = outputText.trim()
+    if (!source || !translated || outputHasError) return
 
     const alreadySaved = savedLessons.some(
-      (item) => item.english === english && item.lang === targetLang,
+      (item) => item.english === source && item.lang === targetLang && item.sourceLang === sourceLang,
     )
     if (alreadySaved) return
 
     setSavedLessons((prev) => [
       ...prev,
-      { id: Date.now(), english, translated, lang: targetLang },
+      { id: Date.now(), english: source, translated, lang: targetLang, sourceLang },
     ])
   }
 
   function handleLoadLesson(item) {
-    setEnglishText(item.english)
-    setHindiText(item.translated)
+    setInputText(item.english)
+    setOutputText(item.translated)
+    setSourceLang(item.sourceLang || 'en')
     setTargetLang(item.lang)
-    setHindiHasError(false)
+    setOutputHasError(false)
     setSpeechError('')
     setIsCopied(false)
-    stopAudio(audioRef.current)
-    audioRef.current = null
-    setIsSpeaking(false)
+    resetPlayback()
   }
 
   function handleDeleteLesson(id) {
@@ -307,6 +355,10 @@ function App() {
   function handleClearAllSaved() {
     setSavedLessons([])
   }
+
+  const isAlreadySaved = savedLessons.some(
+    (item) => item.english === inputText.trim() && item.lang === targetLang && item.sourceLang === sourceLang,
+  )
 
   return (
     <div className="min-h-svh bg-gradient-to-br from-sky-50 via-white to-amber-50 text-slate-800">
@@ -328,53 +380,83 @@ function App() {
 
       <main className="mx-auto max-w-6xl px-6 py-10">
         <p className="mb-8 max-w-2xl text-base leading-relaxed text-slate-600">
-          Write a lesson in English, then translate it into a vernacular
+          Write a lesson in any language, then translate it into a vernacular
           language for young learners in the classroom.
         </p>
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-[1fr_auto_1fr]">
+          {/* Source Input Card */}
           <section className="flex min-h-[22rem] flex-col rounded-3xl border border-sky-100 bg-white p-6 shadow-sm shadow-sky-100/80">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-slate-900">English</h2>
+                <select
+                  value={sourceLang}
+                  onChange={handleSourceLangChange}
+                  className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-semibold text-slate-900 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                >
+                  {LANGUAGES.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.label}
+                    </option>
+                  ))}
+                </select>
                 <button
                   type="button"
                   onClick={handleMicToggle}
                   aria-pressed={isListening}
-                  className={`inline-flex items-center justify-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-sky-100 ${
-                    isListening
-                      ? 'border-rose-200 bg-rose-50 text-rose-700 animate-pulse'
-                      : 'border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100'
-                  }`}
+                  className={`inline-flex items-center justify-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-sky-100 ${isListening
+                    ? 'border-rose-200 bg-rose-50 text-rose-700 animate-pulse'
+                    : 'border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100'
+                    }`}
                 >
                   <span aria-hidden="true">🎙️</span>
                   {isListening ? 'Listening…' : 'Dictate'}
                 </button>
+                <button
+                  type="button"
+                  onClick={handleListenSource}
+                  disabled={!inputText.trim()}
+                  className="inline-flex items-center justify-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700 shadow-sm transition hover:bg-sky-100 focus:outline-none focus:ring-2 focus:ring-sky-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span aria-hidden="true">🔊</span>
+                </button>
               </div>
               <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
-                Lesson input
+                Source
               </span>
             </div>
-            <label htmlFor="english-lesson" className="sr-only">
-              English lesson
+            <label htmlFor="source-lesson" className="sr-only">
+              {activeSourceLang.label} lesson
             </label>
             <textarea
-              id="english-lesson"
-              value={englishText}
-              onChange={(event) => setEnglishText(event.target.value)}
-              placeholder="Type your lesson here… for example: The sun rises in the east."
+              id="source-lesson"
+              value={inputText}
+              onChange={(event) => setInputText(event.target.value)}
+              placeholder={activeSourceLang.placeholder}
               className="min-h-[16rem] flex-1 resize-none rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-base leading-relaxed text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
             />
           </section>
 
+          {/* Swap Button */}
+          <div className="flex items-center justify-center lg:flex-col">
+            <button
+              type="button"
+              onClick={handleSwapLanguages}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-lg text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-4 focus:ring-sky-100"
+              title="Swap languages"
+            >
+              ⇄
+            </button>
+          </div>
+
+          {/* Target Output Card */}
           <section className="flex min-h-[22rem] flex-col rounded-3xl border border-amber-100 bg-white p-6 shadow-sm shadow-amber-100/80">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-slate-900">{activeLang.label}</h2>
                 <select
                   value={targetLang}
-                  onChange={handleLangChange}
-                  className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                  onChange={handleTargetLangChange}
+                  className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-semibold text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
                 >
                   {LANGUAGES.map((lang) => (
                     <option key={lang.code} value={lang.code}>
@@ -384,18 +466,18 @@ function App() {
                 </select>
               </div>
               <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800">
-                Read only
+                Target
               </span>
             </div>
             <label htmlFor="translated-lesson" className="sr-only">
-              {activeLang.label} translation
+              {activeTargetLang.label} translation
             </label>
             <textarea
               id="translated-lesson"
-              value={hindiText}
+              value={outputText}
               readOnly
-              placeholder={`${activeLang.label} translation will appear here.`}
-              className={`min-h-[16rem] flex-1 resize-none rounded-2xl border bg-amber-50/40 p-4 text-base leading-relaxed outline-none placeholder:text-slate-400 ${hindiHasError
+              placeholder={`${activeTargetLang.label} translation will appear here.`}
+              className={`min-h-[16rem] flex-1 resize-none rounded-2xl border bg-amber-50/40 p-4 text-base leading-relaxed outline-none placeholder:text-slate-400 ${outputHasError
                 ? 'border-rose-200 text-rose-700'
                 : 'border-slate-200 text-slate-800'
                 }`}
@@ -422,7 +504,7 @@ function App() {
               <button
                 type="button"
                 onClick={handleCopy}
-                disabled={!hindiText.trim() || hindiHasError}
+                disabled={!outputText.trim() || outputHasError}
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 shadow-sm transition hover:bg-amber-100 focus:outline-none focus:ring-4 focus:ring-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <span aria-hidden="true">{isCopied ? '✓' : '📋'}</span>
@@ -431,11 +513,11 @@ function App() {
               <button
                 type="button"
                 onClick={handleSaveLesson}
-                disabled={!hindiText.trim() || hindiHasError || savedLessons.some((item) => item.english === englishText.trim() && item.lang === targetLang)}
+                disabled={!outputText.trim() || outputHasError || isAlreadySaved}
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 shadow-sm transition hover:bg-amber-100 focus:outline-none focus:ring-4 focus:ring-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <span aria-hidden="true">{savedLessons.some((item) => item.english === englishText.trim() && item.lang === targetLang) ? '✓' : '🔖'}</span>
-                {savedLessons.some((item) => item.english === englishText.trim() && item.lang === targetLang) ? 'Saved' : 'Save'}
+                <span aria-hidden="true">{isAlreadySaved ? '✓' : '🔖'}</span>
+                {isAlreadySaved ? 'Saved' : 'Save'}
               </button>
               {speechError ? (
                 <p className="text-sm text-rose-600" role="alert">
@@ -512,15 +594,22 @@ function App() {
               ) : (
                 <>
                   {savedLessons.map((item) => {
-                    const lang = LANGUAGES.find((l) => l.code === item.lang)
+                    const srcLang = LANGUAGES.find((l) => l.code === item.sourceLang)
+                    const tgtLang = LANGUAGES.find((l) => l.code === item.lang)
                     return (
                       <div
                         key={item.id}
                         className="flex flex-wrap items-start gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
                       >
-                        <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-800">
-                          {lang?.label || item.lang}
-                        </span>
+                        <div className="flex shrink-0 items-center gap-1">
+                          <span className="rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700">
+                            {srcLang?.label || item.sourceLang || 'EN'}
+                          </span>
+                          <span className="text-xs text-slate-400">→</span>
+                          <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                            {tgtLang?.label || item.lang}
+                          </span>
+                        </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium text-slate-800">{item.english}</p>
                           <p className="mt-1 text-sm text-slate-500">{item.translated}</p>
